@@ -50,9 +50,6 @@ const char* password = "xxxxx";
 unsigned int tConnect = millis();
 unsigned long tLastConnectionAttempt = 0;
 
-// Timers
-#define NUM_TIMERS 3 // As I can't find an easy way to get the number
-                     // of elements in an array
 struct
 {
     boolean enabled;
@@ -65,6 +62,8 @@ struct
   { true, 1*1000, 0, &handleOTA, "handleOTA" },
   { true, 5*1000, 0, &connectIfNeeded, "connectIfNeeded" },  
 };
+
+byte NUM_TIMERS = (sizeof(TIMERS) / sizeof(TIMERS[0]));
 
 void setup() {
   pinMode(LED, OUTPUT);  
