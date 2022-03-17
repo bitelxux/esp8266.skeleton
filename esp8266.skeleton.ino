@@ -43,9 +43,13 @@ LED_BUILTIN = GPIO16 (auxiliary constant for the board LED, not a board pin);
 void handleOTA();
 void blinkLed();
 void connectIfNeeded();
+void testLog();
 
-const char* ssid = "SSID";
-const char* password = "xxxxx";
+const char* ssid = "xxx";
+const char* password = "xxx";
+
+const char* log_server = "http://192.168.1.162:8888";
+char buffer[100];
 
 unsigned int tConnect = millis();
 unsigned long tLastConnectionAttempt = 0;
@@ -59,6 +63,7 @@ struct
     char* functionName;
 } TIMERS[] = {
   { true, 1*1000, 0, &blinkLed, "blinkLed" },
+  { true, 1*10, 0, &testLog, "testLog" },
   { true, 1*1000, 0, &handleOTA, "handleOTA" },
   { true, 5*1000, 0, &connectIfNeeded, "connectIfNeeded" },  
 };
@@ -73,6 +78,30 @@ void setup() {
 void handleOTA(){
   ArduinoOTA.handle();
 }
+
+bool send(String what){
+  bool result;
+  WiFiClient client;
+  HTTPClient http;
+  //Serial.print("sending ");
+  //Serial.println(what.c_str());
+  http.begin(client, what.c_str());
+  int httpResponseCode = http.GET();
+
+  if (httpResponseCode == 200){
+        result = true;
+      }
+      else {
+        Serial.print("[send] Error code: ");
+        Serial.println(httpResponseCode);
+        result = false;
+      }
+      // Free resources
+      http.end();
+
+      return result;
+}
+
 
 void attendTimers(){    
   for (int i=0; i<NUM_TIMERS; i++){
@@ -135,6 +164,20 @@ void connectIfNeeded(){
     Serial.println("Trying to connect");
     connect();
   }  
+}
+
+void log(char* msg){
+  sprintf(buffer, "%s/log/%s", log_server, msg);
+  String toSend = buffer;
+  toSend.replace(" ", "%20");
+  send(toSend);
+}
+
+void testLog(){
+  char msg[50];
+  static long cont = 0;
+  sprintf(msg, "this is message %d", cont++);
+  log(msg);
 }
 
 void loop() {  
