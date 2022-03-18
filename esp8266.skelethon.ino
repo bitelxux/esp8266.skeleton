@@ -29,13 +29,15 @@ LED_BUILTIN = GPIO16 (auxiliary constant for the board LED, not a board pin);
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
 #include <ArduinoOTA.h>
-
-#include <ESP8266mDNS.h>
-#include <WiFiUdp.h>
+//#include <ESP8266mDNS.h>
+//#include <WiFiUdp.h>
 
 // This is for each variable to use it's real size 
 // when stored in the EPROM
 #pragma pack(push, 1)
+
+
+#define ID "skelethon"
 
 #define LED BUILTIN_LED
 
@@ -45,8 +47,8 @@ void blinkLed();
 void connectIfNeeded();
 void testLog();
 
-const char* ssid = "xxx";
-const char* password = "xxx";
+const char* ssid = "Starlink";
+const char* password = "82111847";
 
 const char* log_server = "http://192.168.1.162:8888";
 char buffer[100];
@@ -63,7 +65,7 @@ struct
     char* functionName;
 } TIMERS[] = {
   { true, 1*1000, 0, &blinkLed, "blinkLed" },
-  { true, 1*10, 0, &testLog, "testLog" },
+  { true, 1*1000, 0, &testLog, "testLog" },
   { true, 1*1000, 0, &handleOTA, "handleOTA" },
   { true, 5*1000, 0, &connectIfNeeded, "connectIfNeeded" },  
 };
@@ -80,6 +82,11 @@ void handleOTA(){
 }
 
 bool send(String what){
+
+  if (WiFi.status() != WL_CONNECTED){
+    return false;
+  }
+  
   bool result;
   WiFiClient client;
   HTTPClient http;
@@ -138,10 +145,11 @@ void connect(){
 
   Serial.println("");
 
-  if (WiFi.status() == WL_CONNECTED) { 
-    Serial.println("");
-    Serial.print("Connected to WiFi network with IP Address: ");
-    Serial.println(WiFi.localIP());  
+  if (WiFi.status() == WL_CONNECTED) {
+    IPAddress ip = WiFi.localIP();
+    sprintf(buffer, "Connected to %s with IP %d.%d.%d.%d", ssid, ip[0], ip[1], ip[2], ip[3]); 
+    Serial.println(buffer);
+    log(buffer);
     ArduinoOTA.begin();
   }
   else
@@ -167,16 +175,17 @@ void connectIfNeeded(){
 }
 
 void log(char* msg){
-  sprintf(buffer, "%s/log/%s", log_server, msg);
+  char buffer[100];
+  sprintf(buffer, "%s/log/[%s] %s", log_server, ID, msg);
   String toSend = buffer;
   toSend.replace(" ", "%20");
   send(toSend);
 }
 
 void testLog(){
-  char msg[50];
   static long cont = 0;
-  sprintf(msg, "this is message %d", cont++);
+  char msg[50];
+  sprintf(msg, "this is remote log test %d", cont++);
   log(msg);
 }
 
