@@ -45,10 +45,10 @@ LED_BUILTIN = GPIO16 (auxiliary constant for the board LED, not a board pin);
 void handleOTA();
 void blinkLed();
 void connectIfNeeded();
-void testLog();
+void imAlive();
 
-const char* ssid = "Starlink";
-const char* password = "82111847";
+const char* ssid = "xxx";
+const char* password = "xxx";
 
 const char* log_server = "http://192.168.1.162:8888";
 char buffer[100];
@@ -65,12 +65,11 @@ struct
     char* functionName;
 } TIMERS[] = {
   { true, 1*1000, 0, &blinkLed, "blinkLed" },
-  { true, 1*1000, 0, &testLog, "testLog" },
+  { true, 60*1000, 0, &imAlive, "imAlive" },
   { true, 1*1000, 0, &handleOTA, "handleOTA" },
   { true, 5*1000, 0, &connectIfNeeded, "connectIfNeeded" },  
 };
 
-byte NUM_TIMERS = (sizeof(TIMERS) / sizeof(TIMERS[0]));
 
 void setup() {
   pinMode(LED, OUTPUT);  
@@ -111,6 +110,7 @@ bool send(String what){
 
 
 void attendTimers(){    
+  byte NUM_TIMERS = (sizeof(TIMERS) / sizeof(TIMERS[0]));
   for (int i=0; i<NUM_TIMERS; i++){
     if (TIMERS[i].enabled && millis() - TIMERS[i].lastRun >= TIMERS[i].timer) {
       TIMERS[i].function();
@@ -182,10 +182,10 @@ void log(char* msg){
   send(toSend);
 }
 
-void testLog(){
+void imAlive(){
   static long cont = 0;
   char msg[50];
-  sprintf(msg, "this is remote log test %d", cont++);
+  sprintf(msg, "I'm alive! [%d]", ++cont);
   log(msg);
 }
 
